@@ -29,11 +29,11 @@ DEG_ST_ASO_SPF_ST_WT_GF <-
 #-------------------------------------------------------------------------------------------
 
 ## Create joined matrix of features 
-df.DEG_ST_ASO_GF_ST_ASO_SPF <- data.frame("features"=DEG_ST_ASO_GF_ST_ASO_SPF$gene_id, "ASO_GF_ASO_SPF)" = TRUE)
-df.DEG_ST_ASO_GF_ST_WT_GF <- data.frame("features"=DEG_ST_ASO_GF_ST_WT_GF$gene_id, "ASO_GF_WT_GF" = TRUE)
-df.DEG_ST_ASO_SPF_ST_WT_SPF <- data.frame("features"=DEG_ST_ASO_SPF_ST_WT_SPF$gene_id, "ASO_SPF_WT_SPF" = TRUE)
-df.DEG_ST_WT_GF_ST_WT_SPF <- data.frame("features"=DEG_ST_WT_GF_ST_WT_SPF$gene_id, "WT_GF_WT_SPF" = TRUE)
-df.DEG_ST_ASO_SPF_ST_WT_GF <- data.frame("features"=DEG_ST_ASO_SPF_ST_WT_GF$gene_id, "ASO_SPF_WT_GF" = TRUE)
+df.DEG_ST_ASO_GF_ST_ASO_SPF <- data.frame("features"=DEG_ST_ASO_GF_ST_ASO_SPF$gene_id, "ASO_GF_vs_ASO_SPF" = TRUE)
+df.DEG_ST_ASO_GF_ST_WT_GF <- data.frame("features"=DEG_ST_ASO_GF_ST_WT_GF$gene_id, "ASO_GF_vs_WT_GF" = TRUE)
+df.DEG_ST_ASO_SPF_ST_WT_SPF <- data.frame("features"=DEG_ST_ASO_SPF_ST_WT_SPF$gene_id, "ASO_SPF_vs_WT_SPF" = TRUE)
+df.DEG_ST_WT_GF_ST_WT_SPF <- data.frame("features"=DEG_ST_WT_GF_ST_WT_SPF$gene_id, "WT_GF_vs_WT_SPF" = TRUE)
+df.DEG_ST_ASO_SPF_ST_WT_GF <- data.frame("features"=DEG_ST_ASO_SPF_ST_WT_GF$gene_id, "ASO_SPF_vs_WT_GF" = TRUE)
 
 all_sig <- full_join(df.DEG_ST_ASO_GF_ST_ASO_SPF, df.DEG_ST_ASO_GF_ST_WT_GF,  by="features") %>% 
   full_join(df.DEG_ST_ASO_SPF_ST_WT_SPF,  by="features") %>% 
@@ -42,7 +42,7 @@ all_sig <- full_join(df.DEG_ST_ASO_GF_ST_ASO_SPF, df.DEG_ST_ASO_GF_ST_WT_GF,  by
 all_sig[is.na(all_sig)] <-  F
 
 venn_ALL <- plot(euler(all_sig[-1], shape = "circle"), quantities = TRUE)
-pdf(file = "data/VennDiagram_all_significant",
+pdf(file = "data/VennDiagram_all_significant.pdf",
     width = 7, 
     height = 5,
     pointsize = 12)
@@ -102,7 +102,7 @@ UP_sig[is.na(UP_sig)] <-  F
 
 venn_UP <- plot(euler(UP_sig[-1], shape = "circle"), quantities = TRUE)
 
-pdf(file = "data/VennDiagram_UP_significant",
+pdf(file = "data/VennDiagram_UP_significant.pdf",
     width = 7, 
     height = 5,
     pointsize = 12)
@@ -132,7 +132,7 @@ DN_sig[is.na(DN_sig)] <-  F
 
 venn_DN <- plot(euler(DN_sig[-1], shape = "circle"), quantities = TRUE)
 
-pdf(file = "data/VennDiagram_DN_significant",
+pdf(file = "data/VennDiagram_DN_significant.pdf",
     width = 7, 
     height = 5,
     pointsize = 12)
