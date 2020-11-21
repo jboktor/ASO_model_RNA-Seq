@@ -1,0 +1,11 @@
+Pathway,Total,Expected,Hits,P.Value,FDR
+Synaptic vesicle cycle,77,0.362,4,0.000445,0.14
+HTLV-I infection,246,1.16,5,0.00561,0.653
+Insulin secretion,86,0.405,3,0.00755,0.653
+IL-17 signaling pathway,91,0.428,3,0.00882,0.653
+SNARE interactions in vesicular transport,33,0.155,2,0.0104,0.653
+TNF signaling pathway,110,0.518,3,0.0147,0.771
+Epstein-Barr virus infection,230,1.08,4,0.0223,1
+Apoptosis,136,0.64,3,0.0257,1
+Endocytosis,270,1.27,4,0.0372,1
+Amphetamine addiction,68,0.32,2,0.0405,1
