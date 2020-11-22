@@ -1,10 +1,7 @@
 # Network prep script
 
-library(dplyr)
-library(tidyverse)
-library(readr)
-library(tibble)
-library(BiocGenerics)
+source("src/load_packages.R")
+source("src/load_files.R")
 
 # Read in data
 df.fpkm <-read.csv(file = "files/FPKM_all.csv",  header= T)
@@ -43,32 +40,31 @@ rownames(df.output) <- NULL
 #             row.names = F, col.names = TRUE)
 
 
-
-ASO_GF_vs_ASO_SPF <- read.delim(file = "files/DEG_ST_ASO_GF_ST_ASO_SPF.txt", header = TRUE, sep = "\t", dec = ".")
-ASO_GF_vs_WT_GF <- read.delim(file = "files/DEG_ST_ASO_GF_ST_WT_GF.txt", header = TRUE, sep = "\t", dec = ".")
-ASO_SPF_vs_WT_SPF <- read.delim(file = "files/DEG_ST_ASO_SPF_ST_WT_SPF.txt", header = TRUE, sep = "\t", dec = ".")
-
-ASO_GF_vs_ASO_SPF.sig <- filter(ASO_GF_vs_ASO_SPF, significant == "yes")
-# ASO_GF_vs_WT_GF.sig <- filter(ASO_GF_vs_WT_GF, significant == "yes")
-ASO_SPF_vs_WT_SPF.sig <- filter(ASO_SPF_vs_WT_SPF, significant == "yes")
-
 # Select features shared in (ASO SPF/GF) & (SPF ASO/WT) Comparisons
-genes_of_interest <- ASO_GF_vs_ASO_SPF.sig %>% 
-  filter(test_id %in% ASO_SPF_vs_WT_SPF.sig$test_id)
+
+genes_of_interest <- DEG_ST_ASO_GF_ST_ASO_SPF.SIG %>% 
+  dplyr::filter(test_id %in% DEG_ST_ASO_SPF_ST_WT_SPF.SIG$test_id) %>% 
+  dplyr::filter(test_id %ni% DEG_ST_WT_GF_ST_WT_SPF.SIG$test_id) %>% 
+  dplyr::select(test_id, log2.fold_change.) %>% 
+  dplyr::mutate(test_id = factor(test_id))
+
+write.csv(genes_of_interest, file = "files/ASO_GF_vs_ASO_SPF_X_ASO_SPF_vs_WT_SPF.SIG_NetworkAnalyst_formatted.csv",
+            row.names = F)
 
 
-
-#### Only ASO_GF_vs_ASO_SPF.sig genes and Log2FC for network analysis
-output2 <- ASO_GF_vs_ASO_SPF.sig %>% 
+#### Only ASO_GF_vs_ASO_SPF.SIGgenes and Log2FC for network analysis
+output2 <- DEG_ST_ASO_GF_ST_ASO_SPF.SIG %>% 
   select(test_id, log2.fold_change.) %>% 
   mutate(test_id = factor(test_id))
-# write.csv(output2, file = "files/ASO_GF_vs_ASO_SPF.sig_NetworkAnalyst_formatted.csv",
+# write.csv(output2, file = "files/ASO_GF_vs_ASO_SPF.SIG_NetworkAnalyst_formatted.csv",
 #             row.names = F)
 
-#### Only ASO_SPF_vs_WT_SPF.sig genes and Log2FC for network analysis
-output3 <- ASO_SPF_vs_WT_SPF.sig %>% 
+#### Only ASO_SPF_vs_WT_SPF.SIGgenes and Log2FC for network analysis
+output3 <- DEG_ST_ASO_SPF_ST_WT_SPF.SIG %>% 
   select(test_id, log2.fold_change.) %>% 
   mutate(test_id = factor(test_id))
-# write.csv(output3, file = "files/ASO_SPF_vs_WT_SPF.sig_NetworkAnalyst_formatted.csv",
+# write.csv(output3, file = "files/DEG_ST_ASO_SPF_ST_WT_SPF.SIG_NetworkAnalyst_formatted.csv",
 #           row.names = F)
+
+
 

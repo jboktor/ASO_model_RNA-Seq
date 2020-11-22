@@ -1,7 +1,7 @@
 # Heatmap of significant gene in various comparisons
 
 source("src/load_files.R")
-
+source("src/load_packages.R")
 
 ## Create joined matrix of gene 
 df.DEG_ST_ASO_GF_ST_ASO_SPF <- data.frame("gene"=DEG_ST_ASO_GF_ST_ASO_SPF.SIG$gene_id, "ASO_GF_ASO_SPF)" = TRUE)
@@ -42,18 +42,9 @@ joined.df <- full_join(A, B,  by="gene") %>%
 
 
 
-
-
 # filter for genes significant in any comparison
 joined.df.sig <- joined.df %>% 
   filter(gene %in% all_sig$gene)
-
-
-# Cluster X & Y axis values
-library(ggdendro)
-library(plyr)
-library(fastcluster)
-library(dendextend)
 
 gene.dendro <- as.dendrogram(hclust(d = dist(x = joined.df.sig[-1])))
 comparison.dendro <- as.dendrogram(hclust(d = dist(x = t(joined.df.sig[-1]))))

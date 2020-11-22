@@ -1,12 +1,6 @@
-# Heatmap of significant features in various comparisons
+# Load required data tables
 
-library(eulerr)
-library(dplyr)
-library(tidyverse)
-library(readr)
-library(tibble)
-library(BiocGenerics)
-
+source("src/load_packages.R")
 
 # Load significant genes in comparisons
 DEG_ST_ASO_GF_ST_ASO_SPF <- 
