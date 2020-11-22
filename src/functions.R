@@ -27,10 +27,12 @@ GO_bubble_plot <- function(df){
 GO_barplot <- function(df, fill){
   
   df %>% 
-    mutate(hitsPerc=Hit.Count.in.Query.List*100/Hit.Count.in.Genome) %>%
-    arrange(q.value.FDR.B.H, desc(hitsPerc)) %>%
+    drop_na("q.value.FDR.B.H") %>%
+    mutate(Hit.Count.in.Query.List = as.integer(Hit.Count.in.Query.List)) %>%
+    dplyr::mutate(hitsPerc=Hit.Count.in.Query.List*100/Hit.Count.in.Genome) %>%
+    dplyr::arrange(q.value.FDR.B.H, desc(hitsPerc)) %>%
     slice_head(n = 15) %>% 
-    mutate(yvar = paste(Name, ID)) %>% 
+    dplyr::mutate(yvar = paste(Name, ID)) %>% 
     ggplot(aes(x= -log10(q.value.FDR.B.H), 
                y=reorder(yvar, -q.value.FDR.B.H))) +
     geom_bar(stat = "identity", fill = fill, width = 0.5) + 
@@ -43,28 +45,31 @@ GO_barplot <- function(df, fill){
 #------------------------------------------------------------------------------
 
 
-xysummary <- function(df, genekeydf, siglist, 
-                      x, y, xgroup, ygroup, title, fill){
+xysummary <- function(df, genekeydf, siglist,
+                      x, y, xgroup, ygroup, title, fill, force){
   
   cols <- c("nodiff" = "#808080", "diff" = fill)
   col.rims <- c("nodiff" = "#ffffff", "diff" = fill)
   
   # remerge genename
-  df.merged <- left_join(df, genekeydf, by = "key")
   # select df of only significant genes
   sigfilter <- siglist %>% 
-    top_n(20, wt = q_value)
+    dplyr::arrange(q_value, desc(abs(log2.fold_change.))) %>%
+    slice_head(n = 25)
+  
+  cat("Top 20 most significant genes: \n\n")
   print(sigfilter$gene)
   
-  df.merged %>% 
-    dplyr::mutate(genelabels = if_else(Genes %in% sigfilter$gene, Genes, "")) %>% 
-    dplyr::mutate(goi_col = if_else(Genes %in% DEG_ST_ASO_GF_ST_ASO_SPF.SIG$gene, "diff", "nodiff")) %>% 
-    # mutate(goi_col = if_else(abs(log2diff) > 1, "diff", "nodiff")) %>% 
-    mutate(log2diff = log2((x + 1)/(y + 1))) %>% 
-    ggplot(aes(x=log2(x + 1), y=log2(y + 1))) +
+  df %>% 
+    dplyr::mutate(genelabels = if_else(gene %in% sigfilter$gene, gene, "")) %>% 
+    dplyr::mutate(goi_col = if_else(gene %in% siglist$gene, "diff", "nodiff")) %>% 
+    dplyr::mutate(log2_value_1 = log2(value_1 + 1)) %>% 
+    dplyr::mutate(log2_value_2 = log2(value_2 + 1)) %>%
+    dplyr::arrange(desc(goi_col)) %>% 
+    ggplot(aes(x=log2_value_1, y=log2_value_2)) +
     geom_point(aes(fill = goi_col, color = goi_col),
-               shape=21, size=0.7, alpha = 0.8) +
-    geom_text_repel(aes(label = genelabels), segment.alpha = 0.1, size = 2, force = 3) +
+               shape=21, size=0.7, alpha = 0.7) +
+    geom_text_repel(aes(label = genelabels), segment.alpha = 0.2, segment.size = 0.2, size =1.75, force = force, max.iter=6000) +
     theme_classic() +
     geom_abline(intercept = 0, slope = 1) +
     labs(x = paste0("expression (log2 FPKM + 1): ", xgroup),
@@ -77,27 +82,68 @@ xysummary <- function(df, genekeydf, siglist,
 }
 
 
-# xysummary <- function(df, x, y, xgroup, ygroup, title, fill){
-#   
-#   cols <- c("nodiff" = "#808080", "diff" = fill)
-#   col.rims <- c("nodiff" = "#ffffff", "diff" = fill)
-#   
-#   df %>% 
-#     mutate(log2diff = log2((x + 1)/(y + 1))) %>% 
-#     mutate(goi_col = if_else(abs(log2diff) > 1, "diff", "nodiff")) %>% 
-#     ggplot(aes(x=log2(x + 1), y=log2(y + 1))) +
-#     geom_point(aes(fill = goi_col, color = goi_col),
-#                shape=21, size=0.7, alpha = 0.8) +
-#     theme_classic() +
-#     geom_abline(intercept = 0, slope = 1) +
-#     labs(x = paste0("expression (log2 FPKM + 1): ", xgroup),
-#          y = paste0("expression (log2 FPKM + 1): ", ygroup),
-#          title = title) +
-#     scale_color_manual(values = col.rims, name ="Group") +
-#     scale_fill_manual(values = cols, name ="Group") +
-#     theme(legend.position = "none", 
-#           plot.title = element_text(hjust = 0.5))
-# }
 
 #------------------------------------------------------------------------------
+boxplot_transformed <- function(goi, cols = group.cols, 
+                    title = blank.title, ylabel = blank.ylabel){
+  
+  blank.title = " "; blank.ylabel = " "
+  group.cols = c("ASO_GF"= "#FF6000", "ASO_SPF" = "#077E97", 
+                 "WT_GF" = "#A00000", "WT_SPF" = "808080")
+  
+  set.seed(123)
+  
+  df.long %>% 
+    filter(Genes == goi) %>% 
+    ggplot(aes(x=group, y= log2(count + 1))) +
+    geom_boxplot(aes(fill = group), alpha = 0.75, outlier.alpha = 0, width = 0.9) +
+    geom_point(aes(fill = group), position = position_jitterdodge(jitter.width = 0.5), 
+               shape=21, size=1.5, alpha = 1) +
+    theme_classic() +
+    ggtitle(goi) +
+    labs(y = expression(paste(log[2], " (FPKM + 1)"))) +
+    scale_color_manual(values = cols, name ="Group") +
+    scale_fill_manual(values = cols, name ="Group") +
+    theme(plot.title = element_text(hjust = 0.5),
+          axis.title.x = element_blank(),
+          panel.grid.major.y = element_blank(),
+          legend.position = "none")
+  
+}
+
 #------------------------------------------------------------------------------
+boxplot_fpkm <- function(goi, cols = group.cols, 
+                    title = blank.title, ylabel = blank.ylabel){
+  
+  blank.title = " "; blank.ylabel = " "
+  group.cols = c("ASO_GF"= "#FF6000", "ASO_SPF" = "#077E97", 
+                 "WT_GF" = "#A00000", "WT_SPF" = "808080")
+  
+  set.seed(123)
+  
+  df.long %>% 
+    filter(Genes == goi) %>% 
+    ggplot(aes(x=group, y= count)) +
+    geom_boxplot(aes(fill = group), alpha = 0.75, outlier.alpha = 0, width = 0.9) +
+    geom_point(aes(fill = group), position = position_jitterdodge(jitter.width = 0.5), 
+               shape=21, size=1.5, alpha = 1) +
+    theme_classic() +
+    ggtitle(goi) +
+    labs(y = "FPKM") +
+    scale_color_manual(values = cols, name ="Group") +
+    scale_fill_manual(values = cols, name ="Group") +
+    theme(plot.title = element_text(hjust = 0.5),
+          axis.title.x = element_blank(),
+          panel.grid.major.y = element_blank(),
+          legend.position = "none")
+  
+}
+
+#------------------------------------------------------------------------------
+'%ni%' <- Negate('%in%')
+
+#------------------------------------------------------------------------------
+
+
+
+
